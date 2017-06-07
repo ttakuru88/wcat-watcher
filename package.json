@@ -1,0 +1,24 @@
+{
+  "name": "wcat-watcher",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ttakuru88/wcat-watcher.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ttakuru88/wcat-watcher/issues"
+  },
+  "homepage": "https://github.com/ttakuru88/wcat-watcher#readme",
+  "dependencies": {
+    "aws-sdk": "^2.64.0",
+    "request": "^2.81.0",
+    "twitter": "^1.7.0"
+  }
+}
