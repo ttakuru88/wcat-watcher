@@ -46,40 +46,51 @@ var onGetS3Object = (context, maxTweetId) => {
   })
 }
 
+var putMaxTweetId = (context, maxTweetId) => {
+  console.log(`nextMaxTweetId: ${maxTweetId}`)
+
+  s3.putObject({
+    Bucket: bucket,
+    Key: dataKey,
+    ContentType: 'text/plain',
+    Body: maxTweetId
+  }, (err, data) => {
+    context.done()
+  })
+}
+
 var onGetTweets = (context, maxTweetId, tweets) => {
   let nextMaxTweetId = maxTweetId
   let noticed = 0
 
   for(let i=tweets.length-1; i>=0; i--) {
     let tweet = tweets[i]
-
     nextMaxTweetId = tweet.id_str
-    var message = tweet.text
-    if(tweet.entities.urls.length <= 0) {
-      message += `\nhttps://twitter.com/i/web/status/${tweet.id_str}`
+
+    if(tweet.retweeted_status) {
+      if(++noticed >= tweets.length) {
+        putMaxTweetId(context, nextMaxTweetId)
+      }
     }
-    var formData = {message: message}
-    var headers = {'Authorization': `Bearer ${process.env.LINE_API_KEY}`}
-    request.post({url: 'https://notify-api.line.me/api/notify', form: formData, headers: headers}, (err, httpResponse, body) => {
-      if(JSON.parse(body).status != 200) {
-        console.log(body)
-        context.done()
-        return
+    else{
+      var message = tweet.text
+      if(tweet.entities.urls.length <= 0) {
+        message += `\nhttps://twitter.com/i/web/status/${tweet.id_str}`
       }
-      if(++noticed < tweets.length) {
-        return
-      }
+      var formData = {message: message}
+      var headers = {'Authorization': `Bearer ${process.env.LINE_API_KEY}`}
+      request.post({url: 'https://notify-api.line.me/api/notify', form: formData, headers: headers}, (err, httpResponse, body) => {
+        if(JSON.parse(body).status != 200) {
+          console.log(body)
+          context.done()
+          return
+        }
+        if(++noticed < tweets.length) {
+          return
+        }
 
-      console.log(`nextMaxTweetId: ${nextMaxTweetId}`)
-
-      s3.putObject({
-        Bucket: bucket,
-        Key: dataKey,
-        ContentType: 'text/plain',
-        Body: nextMaxTweetId
-      }, (err, data) => {
-        context.done()
+        putMaxTweetId(context, nextMaxTweetId)
       })
-    })
+    }
   }
 }
